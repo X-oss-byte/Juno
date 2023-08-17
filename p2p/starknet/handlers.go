@@ -225,8 +225,8 @@ func adaptTransaction(transaction core.Transaction) (*spec.Transaction, error) {
 				},
 				Txn: &spec.L2Transaction_Declare{
 					Declare: &spec.DeclareTransaction{
-						// ClassHash: adaptFelt(tx.ClassHash),
-						// CompiledHash: adaptFelt(tx.CompiledClassHash),
+						ClassHash:    adaptFeltToHash(tx.ClassHash),
+						CompiledHash: adaptFeltToHash(tx.CompiledClassHash),
 					},
 				},
 			},
@@ -240,6 +240,13 @@ func adaptTransaction(transaction core.Transaction) (*spec.Transaction, error) {
 func adaptTxSignature(tx core.Transaction) *spec.Signature {
 	return &spec.Signature{
 		Parts: utils.Map(tx.Signature(), adaptFelt),
+	}
+}
+
+func adaptFeltToHash(f *felt.Felt) *spec.Hash {
+	fBytes := f.Bytes()
+	return &spec.Hash{
+		Elements: fBytes[:],
 	}
 }
 
