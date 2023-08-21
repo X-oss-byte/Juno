@@ -24,11 +24,18 @@ message DeclareTransaction
     Hash compiled_hash = 2;
 }
 
+message DeployAccountTransaction
+{
+    Hash class_hash = 1;
+    repeated Felt252 constructor_calldata = 2;
+}
+
 message L2Transaction {
     L2TransactionCommon common = 1;
     oneof txn {
         InvokeTransaction invoke = 2;
         DeclareTransaction declare = 3;
+        DeployAccountTransaction deploy_account = 4;
     }
 }
 
