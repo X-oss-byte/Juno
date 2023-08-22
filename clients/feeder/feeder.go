@@ -301,7 +301,7 @@ func (c *Client) ClassDefinition(ctx context.Context, classHash *felt.Felt) (*Cl
 	return class, nil
 }
 
-func (c *Client) CompiledClassDefinition(ctx context.Context, classHash *felt.Felt) (json.RawMessage, error) {
+func (c *Client) CompiledClassDefinition(ctx context.Context, classHash *felt.Felt) (*CompiledClass, error) {
 	queryURL := c.buildQueryString("get_compiled_class_by_class_hash", map[string]string{
 		"classHash": classHash.String(),
 	})
@@ -312,8 +312,8 @@ func (c *Client) CompiledClassDefinition(ctx context.Context, classHash *felt.Fe
 	}
 	defer body.Close()
 
-	var class json.RawMessage
-	if err = json.NewDecoder(body).Decode(&class); err != nil {
+	class := new(CompiledClass)
+	if err = json.NewDecoder(body).Decode(class); err != nil {
 		return nil, err
 	}
 	return class, nil
