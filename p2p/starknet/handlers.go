@@ -232,6 +232,27 @@ func adaptTransaction(transaction core.Transaction) (*spec.Transaction, error) {
 			},
 		}
 		return &specTx, nil
+	case *core.DeployAccountTransaction:
+		specTx.Common = &spec.TransactionCommon{
+			Nonce:   adaptFelt(tx.Nonce),
+			Version: adaptFelt(tx.Version),
+		}
+		specTx.Txn = &spec.Transaction_L2Transaction{
+			L2Transaction: &spec.L2Transaction{
+				Common: &spec.L2TransactionCommon{
+					// Sender:    adaptFeltToAddress(tx.), todo what should I include here?
+					Signature: adaptTxSignature(tx),
+					MaxFee:    adaptFelt(tx.MaxFee),
+				},
+				Txn: &spec.L2Transaction_DeployAccount{
+					DeployAccount: &spec.DeployAccountTransaction{
+						ClassHash:           adaptFeltToHash(tx.ClassHash),
+						ConstructorCalldata: utils.Map(tx.ConstructorCallData, adaptFelt),
+					},
+				},
+			},
+		}
+		return &specTx, nil
 	default:
 		return nil, fmt.Errorf("unsupported tx type %T", tx)
 	}
