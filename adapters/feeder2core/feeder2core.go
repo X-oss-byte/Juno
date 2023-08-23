@@ -1,6 +1,7 @@
 package feeder2core
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -246,9 +247,17 @@ func AdaptCairo1Class(response *feeder.SierraDefinition, compiledClass *feeder.C
 
 	if compiledClass != nil {
 		class.Compiled.Bytecode = compiledClass.Bytecode
-		class.Compiled.PythonicHints = compiledClass.PythonicHints
+		pyHints, err := json.Marshal(compiledClass.PythonicHints)
+		if err != nil {
+			return nil, err
+		}
+		class.Compiled.PythonicHints = pyHints
 		class.Compiled.CompilerVersion = compiledClass.CompilerVersion
-		class.Compiled.Hints = compiledClass.Hints
+		hints, err := json.Marshal(compiledClass.Hints)
+		if err != nil {
+			return nil, err
+		}
+		class.Compiled.Hints = hints
 		class.Compiled.Prime = compiledClass.Prime
 
 		class.Compiled.EntryPoints.External = make([]core.CompiledEntryPoint, len(compiledClass.EntryPoints.External))
