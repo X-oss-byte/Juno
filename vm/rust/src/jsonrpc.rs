@@ -8,6 +8,17 @@ use starknet_api::transaction::{Calldata, EthAddress, EventContent, L2ToL1Payloa
 use starknet_api::transaction::{Transaction as StarknetApiTransaction};
 
 #[derive(Serialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum TransactionType {
+    Invoke,
+    Declare,
+    #[serde(rename = "DEPLOY_ACCOUNT")]
+    DeployAccount,
+    #[serde(rename = "L1_HANDLER")]
+    L1Handler,
+}
+
+#[derive(Serialize)]
 #[serde(untagged)]
 pub enum TransactionTrace {
     // used for INVOKE_TXN_TRACE and DECLARE_TXN_TRACE
@@ -18,6 +29,7 @@ pub enum TransactionTrace {
         execute_invocation: Option<ExecuteInvocation>,
         #[serde(skip_serializing_if = "Option::is_none")]
         fee_transfer_invocation: Option<FunctionInvocation>,
+        r#type: TransactionType,
     },
     DeployAccount {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -26,10 +38,12 @@ pub enum TransactionTrace {
         constructor_invocation: Option<FunctionInvocation>,
         #[serde(skip_serializing_if = "Option::is_none")]
         fee_transfer_invocation: Option<FunctionInvocation>,
+        r#type: TransactionType,
     },
     L1Handler {
         #[serde(skip_serializing_if = "Option::is_none")]
-        function_invocation: Option<FunctionInvocation>
+        function_invocation: Option<FunctionInvocation>,
+        r#type: TransactionType,
     }
 }
 
@@ -48,6 +62,7 @@ pub fn new_transaction_trace(tx: StarknetApiTransaction, info: BlockifierTxInfo)
         StarknetApiTransaction::L1Handler(_) => {
             TransactionTrace::L1Handler {
                 function_invocation: info.execute_call_info.map(|v| v.into()),
+                r#type: TransactionType::L1Handler,
             }
         },
         StarknetApiTransaction::DeployAccount(_) => {
@@ -55,6 +70,7 @@ pub fn new_transaction_trace(tx: StarknetApiTransaction, info: BlockifierTxInfo)
                 validate_invocation: info.validate_call_info.map(|v| v.into()),
                 constructor_invocation: info.execute_call_info.map(|v| v.into()),
                 fee_transfer_invocation: info.fee_transfer_call_info.map(|v| v.into()),
+                r#type: TransactionType::DeployAccount,
             }
         },
         StarknetApiTransaction::Declare(_) | StarknetApiTransaction::Invoke(_) => {
@@ -65,6 +81,10 @@ pub fn new_transaction_trace(tx: StarknetApiTransaction, info: BlockifierTxInfo)
                     None => info.execute_call_info.map(|v| ExecuteInvocation::Ok(v.into())),
                 },
                 fee_transfer_invocation: info.fee_transfer_call_info.map(|v| v.into()),
+                r#type: match tx {
+                    StarknetApiTransaction::Declare(_) => TransactionType::Declare,
+                    _ => TransactionType::Invoke,
+                }
             }
         },
         StarknetApiTransaction::Deploy(_) => {

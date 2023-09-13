@@ -1226,10 +1226,10 @@ func (h *Handler) SimulateTransactions(id BlockID, transactions []BroadcastedTra
 	return result, nil
 }
 
-func (h *Handler) TraceBlockTransactions(blockHash felt.Felt) ([]TracedBlockTransaction, *jsonrpc.Error) {
-	block, err := h.bcReader.BlockByHash(&blockHash)
-	if err != nil {
-		return nil, ErrInvalidBlockHash
+func (h *Handler) TraceBlockTransactions(id BlockID) ([]TracedBlockTransaction, *jsonrpc.Error) {
+	block, err := h.blockByID(&id)
+	if block == nil || err != nil {
+		return nil, ErrBlockNotFound
 	}
 
 	return h.traceBlockTransactions(block, len(block.Transactions))
