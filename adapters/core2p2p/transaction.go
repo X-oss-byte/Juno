@@ -171,7 +171,7 @@ func adaptL1HandlerTransaction(tx *core.L1HandlerTransaction) *spec.Transaction_
 	}
 
 	if tx.Version != nil && !tx.Version.Is(1) {
-		panic(fmt.Errorf("unsupported L1Handler tx version %s", tx.Version.String()))
+		panic(fmt.Errorf("unsupported L1Handler tx version %s", tx.Version))
 	}
 
 	return &spec.Transaction_L1Handler{
