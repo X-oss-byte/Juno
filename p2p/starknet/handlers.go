@@ -65,7 +65,8 @@ func (h *Handler) StreamHandler(stream network.Stream) {
 
 	response, err := h.reqHandler(req)
 	if err != nil {
-		h.log.Debugw("Error handling request", "peer", stream.ID(), "protocol", stream.Protocol(), "err", err, "request", "") // todo req.String() ?
+		h.log.Debugw("Error handling request", "peer", stream.ID(),
+			"protocol", stream.Protocol(), "err", err, "request", "") // todo req.String() ?
 		return
 	}
 

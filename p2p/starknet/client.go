@@ -57,11 +57,9 @@ func (c *Client) sendAndReceiveInto(ctx context.Context, req, res proto.Message)
 	return c.receiveInto(stream, res)
 }
 
-func (c *Client) GetBlocks(ctx context.Context, req *spec.GetBlocks) (Stream[*spec.BlockHeader], error) {
-	wrappedReq := spec.Request{
-		Req: &spec.Request_GetBlocks{
-			GetBlocks: req,
-		},
+func (c *Client) GetBlockBodies(ctx context.Context, it *spec.Iteration) (Stream[*spec.BlockHeader], error) {
+	wrappedReq := spec.BlockBodiesRequest{
+		Iteration: it,
 	}
 
 	stream, err := c.newStream(ctx, c.protocolID)
@@ -82,56 +80,50 @@ func (c *Client) GetBlocks(ctx context.Context, req *spec.GetBlocks) (Stream[*sp
 	}, nil
 }
 
-func (c *Client) GetSignatures(ctx context.Context, req *spec.GetSignatures) (*spec.Signatures, error) {
-	wrappedReq := spec.Request{
-		Req: &spec.Request_GetSignatures{
-			GetSignatures: req,
-		},
+//func (c *Client) GetSignatures(ctx context.Context, it *spec.Iteration) (*spec.Signatures, error) {
+//	wrappedReq := spec.Request{
+//		Req: &spec.Request_GetSignatures{
+//			GetSignatures: req,
+//		},
+//	}
+//
+//	var res spec.Signatures
+//	if err := c.sendAndReceiveInto(ctx, &wrappedReq, &res); err != nil {
+//		return nil, err
+//	}
+//	return &res, nil
+//}
+
+func (c *Client) GetEvents(ctx context.Context, it *spec.Iteration) (*spec.EventsResponse, error) {
+	wrappedReq := spec.EventsRequest{
+		Iteration: it,
 	}
 
-	var res spec.Signatures
+	var res spec.EventsResponse
 	if err := c.sendAndReceiveInto(ctx, &wrappedReq, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *Client) GetEvents(ctx context.Context, req *spec.GetEvents) (*spec.Events, error) {
-	wrappedReq := spec.Request{
-		Req: &spec.Request_GetEvents{
-			GetEvents: req,
-		},
+func (c *Client) GetReceipts(ctx context.Context, it *spec.Iteration) (*spec.ReceiptsResponse, error) {
+	wrappedReq := spec.ReceiptsRequest{
+		Iteration: it,
 	}
 
-	var res spec.Events
+	var res spec.ReceiptsResponse
 	if err := c.sendAndReceiveInto(ctx, &wrappedReq, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (c *Client) GetReceipts(ctx context.Context, req *spec.GetReceipts) (*spec.Receipts, error) {
-	wrappedReq := spec.Request{
-		Req: &spec.Request_GetReceipts{
-			GetReceipts: req,
-		},
+func (c *Client) GetTransactions(ctx context.Context, it *spec.Iteration) (*spec.TransactionsResponse, error) {
+	wrappedReq := spec.TransactionsRequest{
+		Iteration: it,
 	}
 
-	var res spec.Receipts
-	if err := c.sendAndReceiveInto(ctx, &wrappedReq, &res); err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (c *Client) GetTransactions(ctx context.Context, req *spec.GetTransactions) (*spec.Transactions, error) {
-	wrappedReq := spec.Request{
-		Req: &spec.Request_GetTransactions{
-			GetTransactions: req,
-		},
-	}
-
-	var res spec.Transactions
+	var res spec.TransactionsResponse
 	if err := c.sendAndReceiveInto(ctx, &wrappedReq, &res); err != nil {
 		return nil, err
 	}
