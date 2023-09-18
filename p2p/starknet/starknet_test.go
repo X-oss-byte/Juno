@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// nolint: gocritic
 func TestClientHandler(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -45,25 +46,25 @@ func TestClientHandler(t *testing.T) {
 	_ = client
 
 	t.Run("get blocks", func(t *testing.T) {
-		//res, cErr := client.GetBlockBodies(testCtx, &spec.GetBlocks{})
-		//require.NoError(t, cErr)
+		// res, cErr := client.GetBlockBodies(testCtx, &spec.GetBlocks{})
+		// require.NoError(t, cErr)
 		//
-		//count := uint32(0)
-		//for header, valid := res(); valid; header, valid = res() {
-		//	assert.Equal(t, count, header.State.NLeaves)
-		//	count++
-		//}
-		//require.Equal(t, uint32(4), count)
+		// count := uint32(0)
+		// for header, valid := res(); valid; header, valid = res() {
+		// 	assert.Equal(t, count, header.State.NLeaves)
+		// 	count++
+		// }
+		// require.Equal(t, uint32(4), count)
 	})
 
 	t.Run("get signatures", func(t *testing.T) {
-		//res, cErr := client.GetSignatures(testCtx, &spec.GetSignatures{
-		//	Id: &spec.BlockID{
-		//		Height: 44,
-		//	},
-		//})
-		//require.NoError(t, cErr)
-		//require.Equal(t, res.Id.Height, uint64(44))
+		// res, cErr := client.GetSignatures(testCtx, &spec.GetSignatures{
+		// 	Id: &spec.BlockID{
+		// 		Height: 44,
+		// 	},
+		// })
+		// require.NoError(t, cErr)
+		// require.Equal(t, res.Id.Height, uint64(44))
 	})
 
 	t.Run("get receipts", func(t *testing.T) {

@@ -109,7 +109,7 @@ func AdaptTransaction(transaction core.Transaction) *spec.Transaction { //nolint
 	case *core.InvokeTransaction:
 		switch {
 		case tx.Version == nil:
-			panic("fuck")
+			panic("Invoke transaction has not set version field")
 		case tx.Version.Is(0):
 			specTx.Txn = &spec.Transaction_InvokeV0_{
 				InvokeV0: &spec.Transaction_InvokeV0{

@@ -80,7 +80,7 @@ func (c *Client) GetBlockBodies(ctx context.Context, it *spec.Iteration) (Stream
 	}, nil
 }
 
-//func (c *Client) GetSignatures(ctx context.Context, it *spec.Iteration) (*spec.Signatures, error) {
+// func (c *Client) GetSignatures(ctx context.Context, it *spec.Iteration) (*spec.Signatures, error) {
 //	wrappedReq := spec.Request{
 //		Req: &spec.Request_GetSignatures{
 //			GetSignatures: req,
@@ -92,7 +92,7 @@ func (c *Client) GetBlockBodies(ctx context.Context, it *spec.Iteration) (Stream
 //		return nil, err
 //	}
 //	return &res, nil
-//}
+// }
 
 func (c *Client) GetEvents(ctx context.Context, it *spec.Iteration) (*spec.EventsResponse, error) {
 	wrappedReq := spec.EventsRequest{

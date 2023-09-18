@@ -165,7 +165,7 @@ func (h *Handler) HandleGetEvents(req *spec.Iteration) (*spec.EventsResponse, er
 
 func (h *Handler) HandleGetReceipts(req *spec.Iteration) (*spec.ReceiptsResponse, error) {
 	// todo: read from bcReader and adapt to p2p type
-	magic := uint64(37)
+	magic := uint64(37) //nolint:gomnd
 	return &spec.ReceiptsResponse{
 		BlockNumber: magic,
 		BlockHash:   nil,
