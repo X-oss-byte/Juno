@@ -1,4 +1,4 @@
-//go:generate protoc --go_out=./ --proto_path=./ --go_opt=Mp2p/proto/requests.proto=./spec --go_opt=Mp2p/proto/transaction.proto=./spec --go_opt=Mp2p/proto/state.proto=./spec --go_opt=Mp2p/proto/snapshot.proto=./spec --go_opt=Mp2p/proto/receipt.proto=./spec --go_opt=Mp2p/proto/mempool.proto=./spec --go_opt=Mp2p/proto/event.proto=./spec --go_opt=Mp2p/proto/block.proto=./spec --go_opt=Mp2p/proto/common.proto=./spec p2p/proto/transaction.proto p2p/proto/state.proto p2p/proto/snapshot.proto p2p/proto/common.proto p2p/proto/block.proto p2p/proto/event.proto p2p/proto/receipt.proto p2p/proto/requests.proto
+//go:generate protoc --go_out=./ --proto_path=./ --go_opt=Mp2p/proto/transaction.proto=./spec --go_opt=Mp2p/proto/state.proto=./spec --go_opt=Mp2p/proto/snapshot.proto=./spec --go_opt=Mp2p/proto/receipt.proto=./spec --go_opt=Mp2p/proto/mempool.proto=./spec --go_opt=Mp2p/proto/event.proto=./spec --go_opt=Mp2p/proto/block.proto=./spec --go_opt=Mp2p/proto/common.proto=./spec p2p/proto/transaction.proto p2p/proto/state.proto p2p/proto/snapshot.proto p2p/proto/common.proto p2p/proto/block.proto p2p/proto/event.proto p2p/proto/receipt.proto
 package starknet
 
 import (
@@ -8,10 +8,8 @@ import (
 	"sync"
 
 	"github.com/NethermindEth/juno/adapters/core2p2p"
-	"github.com/NethermindEth/juno/adapters/p2p2core"
 	"github.com/NethermindEth/juno/blockchain"
 	"github.com/NethermindEth/juno/core"
-	"github.com/NethermindEth/juno/core/felt"
 	"github.com/NethermindEth/juno/p2p/starknet/spec"
 	"github.com/NethermindEth/juno/utils"
 	"github.com/libp2p/go-libp2p/core/network"
@@ -59,15 +57,15 @@ func (h *Handler) StreamHandler(stream network.Stream) {
 		return
 	}
 
-	var req spec.Request
-	if err := proto.Unmarshal(buffer.Bytes(), &req); err != nil {
+	var req proto.Message
+	if err := proto.Unmarshal(buffer.Bytes(), req); err != nil {
 		h.log.Debugw("Error unmarshalling message", "peer", stream.ID(), "protocol", stream.Protocol(), "err", err)
 		return
 	}
 
-	response, err := h.reqHandler(&req)
+	response, err := h.reqHandler(req)
 	if err != nil {
-		h.log.Debugw("Error handling request", "peer", stream.ID(), "protocol", stream.Protocol(), "err", err, "request", req.String())
+		h.log.Debugw("Error handling request", "peer", stream.ID(), "protocol", stream.Protocol(), "err", err, "request", "") // todo req.String() ?
 		return
 	}
 
@@ -78,20 +76,20 @@ func (h *Handler) StreamHandler(stream network.Stream) {
 	}
 }
 
-func (h *Handler) reqHandler(req *spec.Request) (Stream[proto.Message], error) {
+func (h *Handler) reqHandler(req proto.Message) (Stream[proto.Message], error) {
 	var singleResponse proto.Message
 	var err error
-	switch typedReq := req.GetReq().(type) {
-	case *spec.Request_GetBlocks:
-		return h.HandleGetBlocks(typedReq.GetBlocks)
-	case *spec.Request_GetSignatures:
-		singleResponse, err = h.HandleGetSignatures(typedReq.GetSignatures)
-	case *spec.Request_GetEvents:
-		singleResponse, err = h.HandleGetEvents(typedReq.GetEvents)
-	case *spec.Request_GetReceipts:
-		singleResponse, err = h.HandleGetReceipts(typedReq.GetReceipts)
-	case *spec.Request_GetTransactions:
-		singleResponse, err = h.HandleGetTransactions(typedReq.GetTransactions)
+	switch typedReq := req.(type) {
+	case *spec.BlockBodiesRequest:
+		return h.HandleGetBlocks(typedReq.Iteration)
+	// case *spec.:
+	//	singleResponse, err = h.HandleGetSignatures(typedReq.GetSignatures)
+	case *spec.EventsRequest:
+		singleResponse, err = h.HandleGetEvents(typedReq.Iteration)
+	case *spec.ReceiptsRequest:
+		singleResponse, err = h.HandleGetReceipts(typedReq.Iteration)
+	case *spec.TransactionsRequest:
+		return h.HandleGetTransactions(typedReq.Iteration)
 	default:
 		return nil, fmt.Errorf("unhandled request %T", typedReq)
 	}
@@ -102,36 +100,45 @@ func (h *Handler) reqHandler(req *spec.Request) (Stream[proto.Message], error) {
 	return StaticStream[proto.Message](singleResponse), nil
 }
 
-func (h *Handler) HandleGetBlocks(req *spec.GetBlocks) (Stream[proto.Message], error) {
-	// todo: read from bcReader and adapt to p2p type
-	count := uint32(0)
-	return func() (proto.Message, bool) {
-		if count > 3 {
-			return nil, false
-		}
-		count++
-		return &spec.BlockHeader{
-			State: &spec.Merkle{
-				NLeaves: count - 1,
-			},
-		}, true
-	}, nil
-}
-
-func (h *Handler) HandleGetSignatures(req *spec.GetSignatures) (*spec.Signatures, error) {
-	// todo: read from bcReader and adapt to p2p type
-	return &spec.Signatures{
-		Id: req.Id,
-	}, nil
-}
-
-func (h *Handler) HandleGetEvents(req *spec.GetEvents) (*spec.Events, error) {
-	block, err := h.blockByID(req.Id)
+func (h *Handler) HandleGetBlocks(i *spec.Iteration) (Stream[proto.Message], error) {
+	it, err := h.blockIterator(i)
 	if err != nil {
 		return nil, err
 	}
 
-	var result spec.Events
+	return func() (proto.Message, bool) {
+		if !it.Valid() {
+			return nil, false
+		}
+
+		block := it.Block()
+		if it.Err() != nil {
+			// todo log an error
+			return nil, false
+		}
+		it.Next()
+
+		// todo fill the spec later
+		return &spec.BlockBodiesResponse{
+			BlockNumber: block.Number,
+		}, false
+	}, nil
+}
+
+func (h *Handler) HandleGetSignatures(req *spec.Iteration) (*spec.Signatures, error) {
+	// todo: read from bcReader and adapt to p2p type
+	return &spec.Signatures{
+		// Id: req.Id,
+	}, nil
+}
+
+func (h *Handler) HandleGetEvents(req *spec.Iteration) (*spec.EventsResponse, error) {
+	block, err := h.blockByIteration(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*spec.Event
 	for _, receipt := range block.Receipts {
 		for _, ev := range receipt.Events {
 			event := &spec.Event{
@@ -140,159 +147,71 @@ func (h *Handler) HandleGetEvents(req *spec.GetEvents) (*spec.Events, error) {
 				Data:        utils.Map(ev.Data, core2p2p.AdaptFelt),
 			}
 
-			result.Events = append(result.Events, event)
+			events = append(events, event)
 		}
 	}
 
-	return &result, nil
-}
-
-func (h *Handler) HandleGetReceipts(req *spec.GetReceipts) (*spec.Receipts, error) {
-	// todo: read from bcReader and adapt to p2p type
-	magic := 37
-	return &spec.Receipts{
-		Receipts: make([]*spec.Receipt, magic),
+	return &spec.EventsResponse{
+		BlockNumber: block.Number,
+		BlockHash:   core2p2p.AdaptHash(block.Hash),
+		Responses: &spec.EventsResponse_Events_{
+			Events: &spec.EventsResponse_Events{
+				Items: events,
+			},
+		},
 	}, nil
 }
 
-func (h *Handler) HandleGetTransactions(req *spec.GetTransactions) (*spec.Transactions, error) {
-	block, err := h.blockByID(req.Id)
+func (h *Handler) HandleGetReceipts(req *spec.Iteration) (*spec.ReceiptsResponse, error) {
+	// todo: read from bcReader and adapt to p2p type
+	magic := uint64(37)
+	return &spec.ReceiptsResponse{
+		BlockNumber: magic,
+		BlockHash:   nil,
+		Responses:   nil,
+	}, nil
+}
+
+func (h *Handler) HandleGetTransactions(i *spec.Iteration) (Stream[proto.Message], error) {
+	it, err := h.blockIterator(i)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := new(spec.Transactions)
-	for _, transaction := range block.Transactions {
-		tx, err := adaptTransaction(transaction)
-		if err != nil {
-			return nil, err
+	return func() (proto.Message, bool) {
+		if !it.Valid() {
+			return nil, false
 		}
 
-		resp.Transactions = append(resp.Transactions, tx)
-	}
-
-	return resp, nil
-}
-
-func adaptTransaction(transaction core.Transaction) (*spec.Transaction, error) {
-	var specTx spec.Transaction
-
-	switch tx := transaction.(type) {
-	case *core.L1HandlerTransaction:
-		specTx.Common = &spec.TransactionCommon{
-			Nonce:   adaptFelt(tx.Nonce),
-			Version: adaptFelt((*felt.Felt)(tx.Version)),
+		block := it.Block()
+		if it.Err() != nil {
+			h.log.Errorw("Iterator failure", "err", it.Err())
+			return nil, false
 		}
-		specTx.Txn = &spec.Transaction_L1Handler{
-			L1Handler: &spec.L1HandlerTransaction{
-				Contract:           adaptFeltToAddress(tx.ContractAddress),
-				EntryPointSelector: adaptFelt(tx.EntryPointSelector),
-				Calldata:           utils.Map(tx.CallData, adaptFelt),
-			},
-		}
-		return &specTx, nil
-	case *core.InvokeTransaction:
-		specTx.Common = &spec.TransactionCommon{
-			Nonce:   adaptFelt(tx.Nonce),
-			Version: adaptFelt((*felt.Felt)(tx.Version)),
-		}
-		specTx.Txn = &spec.Transaction_L2Transaction{
-			L2Transaction: &spec.L2Transaction{
-				Common: &spec.L2TransactionCommon{
-					Sender:    adaptFeltToAddress(tx.SenderAddress),
-					Signature: adaptTxSignature(tx),
-					MaxFee:    adaptFelt(tx.MaxFee),
-				},
-				Txn: &spec.L2Transaction_Invoke{
-					Invoke: &spec.InvokeTransaction{
-						Calldata: utils.Map(tx.CallData, adaptFelt),
-					},
+		it.Next()
+
+		return &spec.TransactionsResponse{
+			BlockNumber: block.Number,
+			BlockHash:   core2p2p.AdaptHash(block.Hash),
+			Responses: &spec.TransactionsResponse_Transactions{
+				Transactions: &spec.Transactions{
+					Items: utils.Map(block.Transactions, core2p2p.AdaptTransaction),
 				},
 			},
-		}
-		return &specTx, nil
-	case *core.DeclareTransaction:
-		specTx.Common = &spec.TransactionCommon{
-			Nonce:   adaptFelt(tx.Nonce),
-			Version: adaptFelt((*felt.Felt)(tx.Version)),
-		}
-		specTx.Txn = &spec.Transaction_L2Transaction{
-			L2Transaction: &spec.L2Transaction{
-				Common: &spec.L2TransactionCommon{
-					Sender:    adaptFeltToAddress(tx.SenderAddress),
-					Signature: adaptTxSignature(tx),
-					MaxFee:    adaptFelt(tx.MaxFee),
-				},
-				Txn: &spec.L2Transaction_Declare{
-					Declare: &spec.DeclareTransaction{
-						ClassHash:    adaptFeltToHash(tx.ClassHash),
-						CompiledHash: adaptFeltToHash(tx.CompiledClassHash),
-					},
-				},
-			},
-		}
-		return &specTx, nil
-	case *core.DeployAccountTransaction:
-		specTx.Common = &spec.TransactionCommon{
-			Nonce:   adaptFelt(tx.Nonce),
-			Version: adaptFelt(tx.Version),
-		}
-		specTx.Txn = &spec.Transaction_L2Transaction{
-			L2Transaction: &spec.L2Transaction{
-				Common: &spec.L2TransactionCommon{
-					// Sender:    adaptFeltToAddress(tx.), todo what should I include here?
-					Signature: adaptTxSignature(tx),
-					MaxFee:    adaptFelt(tx.MaxFee),
-				},
-				Txn: &spec.L2Transaction_DeployAccount{
-					DeployAccount: &spec.DeployAccountTransaction{
-						ClassHash:           adaptFeltToHash(tx.ClassHash),
-						ConstructorCalldata: utils.Map(tx.ConstructorCallData, adaptFelt),
-					},
-				},
-			},
-		}
-		return &specTx, nil
-	default:
-		return nil, fmt.Errorf("unsupported tx type %T", tx)
-	}
+		}, false
+	}, nil
 }
 
-func adaptTxSignature(tx core.Transaction) *spec.Signature {
-	return &spec.Signature{
-		Parts: utils.Map(tx.Signature(), adaptFelt),
-	}
+func (h *Handler) blockIterator(it *spec.Iteration) (*iterator, error) {
+	forward := it.Direction == spec.Iteration_Forward
+	return newIterator(h.bcReader, it.StartBlock, it.Limit, it.Step, forward)
 }
 
-func adaptFeltToHash(f *felt.Felt) *spec.Hash {
-	fBytes := f.Bytes()
-	return &spec.Hash{
-		Elements: fBytes[:],
-	}
-}
-
-func adaptFeltToAddress(f *felt.Felt) *spec.Address {
-	fBytes := f.Bytes()
-	return &spec.Address{
-		Elements: fBytes[:],
-	}
-}
-
-func adaptFelt(f *felt.Felt) *spec.Felt252 {
-	fBytes := f.Bytes()
-	return &spec.Felt252{
-		Elements: fBytes[:],
-	}
-}
-
-func (h *Handler) blockByID(id *spec.BlockID) (*core.Block, error) {
+func (h *Handler) blockByIteration(it *spec.Iteration) (*core.Block, error) {
 	switch {
-	case id == nil:
-		return nil, errors.New("block id is nil")
-	case id.Hash != nil:
-		hash := p2p2core.AdaptHash(id.Hash)
-		return h.bcReader.BlockByHash(hash)
+	case it == nil:
+		return nil, errors.New("iteration is nil")
 	default:
-		return h.bcReader.BlockByNumber(id.Height)
+		return h.bcReader.BlockByNumber(it.StartBlock)
 	}
 }
