@@ -22,6 +22,9 @@ func newIterator(bcReader blockchain.Reader, blockNumber, limit, step uint64, fo
 	if step == 0 {
 		return nil, fmt.Errorf("step is zero")
 	}
+	if limit == 0 {
+		return nil, fmt.Errorf("limit is zero")
+	}
 
 	return &iterator{
 		bcReader:    bcReader,

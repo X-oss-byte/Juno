@@ -143,8 +143,8 @@ func (h *Handler) HandleGetEvents(req *spec.Iteration) (*spec.EventsResponse, er
 		for _, ev := range receipt.Events {
 			event := &spec.Event{
 				FromAddress: core2p2p.AdaptFelt(ev.From),
-				Keys:        utils.Map(ev.Keys, core2p2p.AdaptFelt),
-				Data:        utils.Map(ev.Data, core2p2p.AdaptFelt),
+				Keys:        core2p2p.AdaptFeltSlice(ev.Keys),
+				Data:        core2p2p.AdaptFeltSlice(ev.Data),
 			}
 
 			events = append(events, event)
