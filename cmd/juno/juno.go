@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -61,7 +63,6 @@ const (
 	defaultHTTPPort            = 6060
 	defaultWS                  = false
 	defaultWSPort              = 6061
-	defaultDBPath              = ""
 	defaultEthNode             = ""
 	defaultPprof               = false
 	defaultPprofPort           = 6062
@@ -150,7 +151,7 @@ func main() {
 //  2. An Execute* function is called on the command returned from step 1.
 //  3. The config struct is populated.
 //  4. Cobra calls the run function.
-func NewCmd(config *node.Config, run func(*cobra.Command, []string) error) *cobra.Command {
+func NewCmd(config *node.Config, run func(*cobra.Command, []string) error) *cobra.Command { //nolint:funlen
 	junoCmd := &cobra.Command{
 		Use:     "juno [flags]",
 		Short:   "Starknet client implementation in Go.",
@@ -178,8 +179,30 @@ func NewCmd(config *node.Config, run func(*cobra.Command, []string) error) *cobr
 
 		// TextUnmarshallerHookFunc allows us to unmarshal values that satisfy the
 		// encoding.TextUnmarshaller interface (see the LogLevel type for an example).
-		return v.Unmarshal(config, viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
+		err := v.Unmarshal(config, viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
 			mapstructure.TextUnmarshallerHookFunc(), mapstructure.StringToTimeDurationHookFunc())))
+		if err != nil {
+			return fmt.Errorf("unmarshal viper config: %v", err)
+		}
+
+		if config.DatabasePath == "" {
+			// DB path could not be found. Re-run defaultDataDir to get the underlying error and return it.
+			dbPath, err := defaultDataDir()
+			if err != nil {
+				return fmt.Errorf("find data directory: %v", err)
+			}
+			// Somehow, defaultDataDir() returned an error the first time but succeeded this time.
+			// This is very unlikely, but we handle it anyway.
+			config.DatabasePath = dbPath
+		}
+		return nil
+	}
+
+	defaultDBPath, err := defaultDataDir()
+	if err != nil {
+		// We can't return an error here because `--help` would fail.
+		// We check that the db path is not empty in PreRunE.
+		defaultDBPath = ""
 	}
 
 	// For testing purposes, these variables cannot be declared outside the function because Cobra
@@ -214,4 +237,20 @@ func NewCmd(config *node.Config, run func(*cobra.Command, []string) error) *cobr
 	junoCmd.Flags().Uint16(grpcPortF, defaultGRPCPort, grpcPortUsage)
 
 	return junoCmd
+}
+
+func defaultDataDir() (string, error) {
+	const junoDirName = "juno"
+
+	if userDataDir := os.Getenv("XDG_DATA_HOME"); userDataDir != "" {
+		return filepath.Join(userDataDir, junoDirName), nil
+	}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	} else if userHomeDir == "" {
+		return "", errors.New("home directory not found")
+	}
+	return filepath.Join(userHomeDir, ".local", "share", junoDirName), nil
 }

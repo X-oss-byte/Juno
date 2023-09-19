@@ -3,6 +3,7 @@ package main_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -14,7 +15,54 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDataDir(t *testing.T) {
+	tests := map[string]struct {
+		dataDir     string
+		homeDir     string
+		expectedDir string
+	}{
+		"data dir exists without home dir": {
+			dataDir:     "dataDir",
+			homeDir:     "",
+			expectedDir: "dataDir/juno",
+		},
+		"data dir and home dir exist": {
+			dataDir:     "dataDir",
+			homeDir:     "homeDir",
+			expectedDir: "dataDir/juno",
+		},
+		"home dir exists without data dir": {
+			dataDir:     "",
+			homeDir:     "homeDir",
+			expectedDir: "homeDir/.local/share/juno",
+		},
+		"neither home dir nor data dir exist": {
+			dataDir:     "",
+			homeDir:     "",
+			expectedDir: "",
+		},
+	}
+
+	for description, test := range tests {
+		t.Run(description, func(t *testing.T) {
+			t.Setenv("XDG_DATA_HOME", test.dataDir)
+			t.Setenv("HOME", test.homeDir)
+			config := new(node.Config)
+			cmd := juno.NewCmd(config, func(_ *cobra.Command, _ []string) error { return nil })
+			err := cmd.Execute()
+			if test.expectedDir == "" {
+				require.Error(t, err)
+				return
+			}
+			require.Equal(t, test.expectedDir, config.DatabasePath)
+		})
+	}
+}
+
 func TestConfigPrecedence(t *testing.T) {
+	dbPathPrefix := "test-db-path"
+	t.Setenv("XDG_DATA_HOME", dbPathPrefix) // Ensure XDG_DATA_HOME exists.
+
 	// The purpose of these tests are to ensure the precedence of our config
 	// values is respected. Since viper offers this feature, it would be
 	// redundant to enumerate all combinations. Thus, only a select few are
@@ -27,7 +75,7 @@ func TestConfigPrecedence(t *testing.T) {
 	defaultHTTPPort := uint16(6060)
 	defaultWS := false
 	defaultWSPort := uint16(6061)
-	defaultDBPath := ""
+	defaultDBPath := filepath.Join(dbPathPrefix, "juno")
 	defaultNetwork := utils.MAINNET
 	defaultPprof := false
 	defaultPprofPort := uint16(6062)
@@ -122,6 +170,7 @@ func TestConfigPrecedence(t *testing.T) {
 				Pprof:               defaultPprof,
 				PprofHost:           defaultHost,
 				PprofPort:           defaultPprofPort,
+				DatabasePath:        defaultDBPath,
 			},
 		},
 		"config file with all settings but without any other flags": {
