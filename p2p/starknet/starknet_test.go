@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// nolint: gocritic
 func TestClientHandler(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -46,6 +45,7 @@ func TestClientHandler(t *testing.T) {
 	_ = client
 
 	t.Run("get blocks", func(t *testing.T) {
+		//nolint:gocritic
 		// res, cErr := client.GetBlockBodies(testCtx, &spec.GetBlocks{})
 		// require.NoError(t, cErr)
 		//
@@ -58,6 +58,7 @@ func TestClientHandler(t *testing.T) {
 	})
 
 	t.Run("get signatures", func(t *testing.T) {
+		//nolint:gocritic
 		// res, cErr := client.GetSignatures(testCtx, &spec.GetSignatures{
 		// 	Id: &spec.BlockID{
 		// 		Height: 44,
@@ -68,12 +69,14 @@ func TestClientHandler(t *testing.T) {
 	})
 
 	t.Run("get receipts", func(t *testing.T) {
+		//nolint:gocritic
 		// res, cErr := client.GetReceipts(testCtx, &spec.GetReceipts{})
 		// require.NoError(t, cErr)
 		// require.Len(t, res.GetReceipts(), 37)
 	})
 
 	t.Run("get txns", func(t *testing.T) {
+		//nolint:gocritic
 		// res, cErr := client.GetTransactions(testCtx, &spec.GetTransactions{})
 		// require.NoError(t, cErr)
 		// require.Len(t, res.GetTransactions(), 1337)
