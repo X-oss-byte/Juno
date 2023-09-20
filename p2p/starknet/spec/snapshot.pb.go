@@ -149,7 +149,7 @@ func (x *PatriciaRangeProof) GetNodes() []*PatriciaNode {
 	return nil
 }
 
-// leafs of the contract state tre
+// leafs of the contract state tree
 type ContractState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -222,21 +222,22 @@ func (x *ContractState) GetNonce() uint64 {
 }
 
 // request a range from the contract state tree that matches the given root (block)
-// starts at 'start' and ends no less than 'end'.
+// starts at 'start' and ends no more than 'end'.
 // the result is  (ContractRange+, PatriciaRangeProof)*
-type GetContractRange struct {
+type ContractRangeRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Root           *Hash  `protobuf:"bytes,2,opt,name=root,proto3" json:"root,omitempty"`
+	Domain         uint32 `protobuf:"varint,1,opt,name=domain,proto3" json:"domain,omitempty"` // volition
+	StateRoot      *Hash  `protobuf:"bytes,2,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`
 	Start          *Hash  `protobuf:"bytes,3,opt,name=start,proto3" json:"start,omitempty"`
 	End            *Hash  `protobuf:"bytes,4,opt,name=end,proto3" json:"end,omitempty"`
 	ChunksPerProof uint32 `protobuf:"varint,5,opt,name=chunks_per_proof,json=chunksPerProof,proto3" json:"chunks_per_proof,omitempty"` // how many ContractRange items to send before sending a proof
 }
 
-func (x *GetContractRange) Reset() {
-	*x = GetContractRange{}
+func (x *ContractRangeRequest) Reset() {
+	*x = ContractRangeRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_p2p_proto_snapshot_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -244,13 +245,13 @@ func (x *GetContractRange) Reset() {
 	}
 }
 
-func (x *GetContractRange) String() string {
+func (x *ContractRangeRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetContractRange) ProtoMessage() {}
+func (*ContractRangeRequest) ProtoMessage() {}
 
-func (x *GetContractRange) ProtoReflect() protoreflect.Message {
+func (x *ContractRangeRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_p2p_proto_snapshot_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -262,33 +263,40 @@ func (x *GetContractRange) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetContractRange.ProtoReflect.Descriptor instead.
-func (*GetContractRange) Descriptor() ([]byte, []int) {
+// Deprecated: Use ContractRangeRequest.ProtoReflect.Descriptor instead.
+func (*ContractRangeRequest) Descriptor() ([]byte, []int) {
 	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetContractRange) GetRoot() *Hash {
+func (x *ContractRangeRequest) GetDomain() uint32 {
 	if x != nil {
-		return x.Root
+		return x.Domain
+	}
+	return 0
+}
+
+func (x *ContractRangeRequest) GetStateRoot() *Hash {
+	if x != nil {
+		return x.StateRoot
 	}
 	return nil
 }
 
-func (x *GetContractRange) GetStart() *Hash {
+func (x *ContractRangeRequest) GetStart() *Hash {
 	if x != nil {
 		return x.Start
 	}
 	return nil
 }
 
-func (x *GetContractRange) GetEnd() *Hash {
+func (x *ContractRangeRequest) GetEnd() *Hash {
 	if x != nil {
 		return x.End
 	}
 	return nil
 }
 
-func (x *GetContractRange) GetChunksPerProof() uint32 {
+func (x *ContractRangeRequest) GetChunksPerProof() uint32 {
 	if x != nil {
 		return x.ChunksPerProof
 	}
@@ -343,21 +351,23 @@ func (x *ContractRange) GetState() []*ContractState {
 	return nil
 }
 
-// duplicate of GetContractRange. Can introduce a 'type' instead.
-// result is (Classes+, PatriciaRangeProof)*
-type GetClassRange struct {
+type ContractRangeResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Root           *Hash  `protobuf:"bytes,1,opt,name=root,proto3" json:"root,omitempty"`
-	Start          *Hash  `protobuf:"bytes,2,opt,name=start,proto3" json:"start,omitempty"`
-	End            *Hash  `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
-	ChunksPerProof uint32 `protobuf:"varint,4,opt,name=chunks_per_proof,json=chunksPerProof,proto3" json:"chunks_per_proof,omitempty"`
+	StateRoot     *Hash `protobuf:"bytes,1,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`
+	ContractsRoot *Hash `protobuf:"bytes,2,opt,name=contracts_root,json=contractsRoot,proto3" json:"contracts_root,omitempty"`
+	ClassesRoot   *Hash `protobuf:"bytes,3,opt,name=classes_root,json=classesRoot,proto3" json:"classes_root,omitempty"`
+	// Types that are assignable to Responses:
+	//
+	//	*ContractRangeResponse_Range
+	//	*ContractRangeResponse_Fin
+	Responses isContractRangeResponse_Responses `protobuf_oneof:"responses"`
 }
 
-func (x *GetClassRange) Reset() {
-	*x = GetClassRange{}
+func (x *ContractRangeResponse) Reset() {
+	*x = ContractRangeResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_p2p_proto_snapshot_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -365,13 +375,13 @@ func (x *GetClassRange) Reset() {
 	}
 }
 
-func (x *GetClassRange) String() string {
+func (x *ContractRangeResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetClassRange) ProtoMessage() {}
+func (*ContractRangeResponse) ProtoMessage() {}
 
-func (x *GetClassRange) ProtoReflect() protoreflect.Message {
+func (x *ContractRangeResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_p2p_proto_snapshot_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -383,38 +393,246 @@ func (x *GetClassRange) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetClassRange.ProtoReflect.Descriptor instead.
-func (*GetClassRange) Descriptor() ([]byte, []int) {
+// Deprecated: Use ContractRangeResponse.ProtoReflect.Descriptor instead.
+func (*ContractRangeResponse) Descriptor() ([]byte, []int) {
 	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetClassRange) GetRoot() *Hash {
+func (x *ContractRangeResponse) GetStateRoot() *Hash {
+	if x != nil {
+		return x.StateRoot
+	}
+	return nil
+}
+
+func (x *ContractRangeResponse) GetContractsRoot() *Hash {
+	if x != nil {
+		return x.ContractsRoot
+	}
+	return nil
+}
+
+func (x *ContractRangeResponse) GetClassesRoot() *Hash {
+	if x != nil {
+		return x.ClassesRoot
+	}
+	return nil
+}
+
+func (m *ContractRangeResponse) GetResponses() isContractRangeResponse_Responses {
+	if m != nil {
+		return m.Responses
+	}
+	return nil
+}
+
+func (x *ContractRangeResponse) GetRange() *ContractRange {
+	if x, ok := x.GetResponses().(*ContractRangeResponse_Range); ok {
+		return x.Range
+	}
+	return nil
+}
+
+func (x *ContractRangeResponse) GetFin() *Fin {
+	if x, ok := x.GetResponses().(*ContractRangeResponse_Fin); ok {
+		return x.Fin
+	}
+	return nil
+}
+
+type isContractRangeResponse_Responses interface {
+	isContractRangeResponse_Responses()
+}
+
+type ContractRangeResponse_Range struct {
+	Range *ContractRange `protobuf:"bytes,4,opt,name=range,proto3,oneof"`
+}
+
+type ContractRangeResponse_Fin struct {
+	Fin *Fin `protobuf:"bytes,5,opt,name=fin,proto3,oneof"`
+}
+
+func (*ContractRangeResponse_Range) isContractRangeResponse_Responses() {}
+
+func (*ContractRangeResponse_Fin) isContractRangeResponse_Responses() {}
+
+// duplicate of GetContractRange. Can introduce a 'type' instead.
+// result is (Classes+, PatriciaRangeProof)*
+type ClassRangeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Root           *Hash  `protobuf:"bytes,1,opt,name=root,proto3" json:"root,omitempty"`
+	Start          *Hash  `protobuf:"bytes,2,opt,name=start,proto3" json:"start,omitempty"`
+	End            *Hash  `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
+	ChunksPerProof uint32 `protobuf:"varint,4,opt,name=chunks_per_proof,json=chunksPerProof,proto3" json:"chunks_per_proof,omitempty"`
+}
+
+func (x *ClassRangeRequest) Reset() {
+	*x = ClassRangeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ClassRangeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClassRangeRequest) ProtoMessage() {}
+
+func (x *ClassRangeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClassRangeRequest.ProtoReflect.Descriptor instead.
+func (*ClassRangeRequest) Descriptor() ([]byte, []int) {
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ClassRangeRequest) GetRoot() *Hash {
 	if x != nil {
 		return x.Root
 	}
 	return nil
 }
 
-func (x *GetClassRange) GetStart() *Hash {
+func (x *ClassRangeRequest) GetStart() *Hash {
 	if x != nil {
 		return x.Start
 	}
 	return nil
 }
 
-func (x *GetClassRange) GetEnd() *Hash {
+func (x *ClassRangeRequest) GetEnd() *Hash {
 	if x != nil {
 		return x.End
 	}
 	return nil
 }
 
-func (x *GetClassRange) GetChunksPerProof() uint32 {
+func (x *ClassRangeRequest) GetChunksPerProof() uint32 {
 	if x != nil {
 		return x.ChunksPerProof
 	}
 	return 0
 }
+
+type ClassRangeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Root          *Hash `protobuf:"bytes,1,opt,name=root,proto3" json:"root,omitempty"`
+	ContractsRoot *Hash `protobuf:"bytes,2,opt,name=contracts_root,json=contractsRoot,proto3" json:"contracts_root,omitempty"`
+	ClassesRoot   *Hash `protobuf:"bytes,3,opt,name=classes_root,json=classesRoot,proto3" json:"classes_root,omitempty"`
+	// Types that are assignable to Responses:
+	//
+	//	*ClassRangeResponse_Classes
+	//	*ClassRangeResponse_Fin
+	Responses isClassRangeResponse_Responses `protobuf_oneof:"responses"`
+}
+
+func (x *ClassRangeResponse) Reset() {
+	*x = ClassRangeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ClassRangeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClassRangeResponse) ProtoMessage() {}
+
+func (x *ClassRangeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClassRangeResponse.ProtoReflect.Descriptor instead.
+func (*ClassRangeResponse) Descriptor() ([]byte, []int) {
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ClassRangeResponse) GetRoot() *Hash {
+	if x != nil {
+		return x.Root
+	}
+	return nil
+}
+
+func (x *ClassRangeResponse) GetContractsRoot() *Hash {
+	if x != nil {
+		return x.ContractsRoot
+	}
+	return nil
+}
+
+func (x *ClassRangeResponse) GetClassesRoot() *Hash {
+	if x != nil {
+		return x.ClassesRoot
+	}
+	return nil
+}
+
+func (m *ClassRangeResponse) GetResponses() isClassRangeResponse_Responses {
+	if m != nil {
+		return m.Responses
+	}
+	return nil
+}
+
+func (x *ClassRangeResponse) GetClasses() *Classes {
+	if x, ok := x.GetResponses().(*ClassRangeResponse_Classes); ok {
+		return x.Classes
+	}
+	return nil
+}
+
+func (x *ClassRangeResponse) GetFin() *Fin {
+	if x, ok := x.GetResponses().(*ClassRangeResponse_Fin); ok {
+		return x.Fin
+	}
+	return nil
+}
+
+type isClassRangeResponse_Responses interface {
+	isClassRangeResponse_Responses()
+}
+
+type ClassRangeResponse_Classes struct {
+	Classes *Classes `protobuf:"bytes,4,opt,name=classes,proto3,oneof"`
+}
+
+type ClassRangeResponse_Fin struct {
+	Fin *Fin `protobuf:"bytes,5,opt,name=fin,proto3,oneof"`
+}
+
+func (*ClassRangeResponse_Classes) isClassRangeResponse_Responses() {}
+
+func (*ClassRangeResponse_Fin) isClassRangeResponse_Responses() {}
 
 // A position in some contract's state tree is identified by the state tree's root and the key in it
 type StorageLeafQuery struct {
@@ -422,14 +640,14 @@ type StorageLeafQuery struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Root *Hash    `protobuf:"bytes,1,opt,name=root,proto3" json:"root,omitempty"`
-	Key  *Felt252 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	ContractStorageRoot *Hash    `protobuf:"bytes,1,opt,name=contract_storage_root,json=contractStorageRoot,proto3" json:"contract_storage_root,omitempty"`
+	Key                 *Felt252 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
 }
 
 func (x *StorageLeafQuery) Reset() {
 	*x = StorageLeafQuery{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[6]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -442,7 +660,7 @@ func (x *StorageLeafQuery) String() string {
 func (*StorageLeafQuery) ProtoMessage() {}
 
 func (x *StorageLeafQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[6]
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,12 +673,12 @@ func (x *StorageLeafQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StorageLeafQuery.ProtoReflect.Descriptor instead.
 func (*StorageLeafQuery) Descriptor() ([]byte, []int) {
-	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{6}
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *StorageLeafQuery) GetRoot() *Hash {
+func (x *StorageLeafQuery) GetContractStorageRoot() *Hash {
 	if x != nil {
-		return x.Root
+		return x.ContractStorageRoot
 	}
 	return nil
 }
@@ -477,15 +695,14 @@ type StorageRangeQuery struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RangeId uint32            `protobuf:"varint,1,opt,name=range_id,json=rangeId,proto3" json:"range_id,omitempty"`
-	Start   *StorageLeafQuery `protobuf:"bytes,2,opt,name=start,proto3" json:"start,omitempty"`
-	End     *StorageLeafQuery `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
+	Start *StorageLeafQuery `protobuf:"bytes,2,opt,name=start,proto3" json:"start,omitempty"`
+	End   *StorageLeafQuery `protobuf:"bytes,3,opt,name=end,proto3" json:"end,omitempty"`
 }
 
 func (x *StorageRangeQuery) Reset() {
 	*x = StorageRangeQuery{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[7]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -498,7 +715,7 @@ func (x *StorageRangeQuery) String() string {
 func (*StorageRangeQuery) ProtoMessage() {}
 
 func (x *StorageRangeQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[7]
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -511,14 +728,7 @@ func (x *StorageRangeQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StorageRangeQuery.ProtoReflect.Descriptor instead.
 func (*StorageRangeQuery) Descriptor() ([]byte, []int) {
-	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *StorageRangeQuery) GetRangeId() uint32 {
-	if x != nil {
-		return x.RangeId
-	}
-	return 0
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *StorageRangeQuery) GetStart() *StorageLeafQuery {
@@ -536,32 +746,33 @@ func (x *StorageRangeQuery) GetEnd() *StorageLeafQuery {
 }
 
 // result is (ContractStorageRange+, PatriciaRangeProof)*
-type GetContractStorageRange struct {
+type ContractStorageRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StateRoot *Hash                `protobuf:"bytes,1,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`
-	Query     []*StorageRangeQuery `protobuf:"bytes,2,rep,name=query,proto3" json:"query,omitempty"`
+	Domain    uint32               `protobuf:"varint,1,opt,name=domain,proto3" json:"domain,omitempty"` // volition
+	StateRoot *Hash                `protobuf:"bytes,2,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`
+	Query     []*StorageRangeQuery `protobuf:"bytes,3,rep,name=query,proto3" json:"query,omitempty"`
 }
 
-func (x *GetContractStorageRange) Reset() {
-	*x = GetContractStorageRange{}
+func (x *ContractStorageRequest) Reset() {
+	*x = ContractStorageRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[8]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *GetContractStorageRange) String() string {
+func (x *ContractStorageRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetContractStorageRange) ProtoMessage() {}
+func (*ContractStorageRequest) ProtoMessage() {}
 
-func (x *GetContractStorageRange) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[8]
+func (x *ContractStorageRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,52 +783,57 @@ func (x *GetContractStorageRange) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetContractStorageRange.ProtoReflect.Descriptor instead.
-func (*GetContractStorageRange) Descriptor() ([]byte, []int) {
-	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{8}
+// Deprecated: Use ContractStorageRequest.ProtoReflect.Descriptor instead.
+func (*ContractStorageRequest) Descriptor() ([]byte, []int) {
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *GetContractStorageRange) GetStateRoot() *Hash {
+func (x *ContractStorageRequest) GetDomain() uint32 {
+	if x != nil {
+		return x.Domain
+	}
+	return 0
+}
+
+func (x *ContractStorageRequest) GetStateRoot() *Hash {
 	if x != nil {
 		return x.StateRoot
 	}
 	return nil
 }
 
-func (x *GetContractStorageRange) GetQuery() []*StorageRangeQuery {
+func (x *ContractStorageRequest) GetQuery() []*StorageRangeQuery {
 	if x != nil {
 		return x.Query
 	}
 	return nil
 }
 
-type ContractStorageRange struct {
+type ContractStorage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RangeId  uint32                 `protobuf:"varint,1,opt,name=range_id,json=rangeId,proto3" json:"range_id,omitempty"`
-	Root     *Hash                  `protobuf:"bytes,2,opt,name=root,proto3" json:"root,omitempty"`
-	KeyValue []*ContractStoredValue `protobuf:"bytes,3,rep,name=keyValue,proto3" json:"keyValue,omitempty"`
+	KeyValue []*ContractStoredValue `protobuf:"bytes,2,rep,name=keyValue,proto3" json:"keyValue,omitempty"`
 }
 
-func (x *ContractStorageRange) Reset() {
-	*x = ContractStorageRange{}
+func (x *ContractStorage) Reset() {
+	*x = ContractStorage{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[9]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *ContractStorageRange) String() string {
+func (x *ContractStorage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ContractStorageRange) ProtoMessage() {}
+func (*ContractStorage) ProtoMessage() {}
 
-func (x *ContractStorageRange) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[9]
+func (x *ContractStorage) ProtoReflect() protoreflect.Message {
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -628,31 +844,106 @@ func (x *ContractStorageRange) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ContractStorageRange.ProtoReflect.Descriptor instead.
-func (*ContractStorageRange) Descriptor() ([]byte, []int) {
-	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{9}
+// Deprecated: Use ContractStorage.ProtoReflect.Descriptor instead.
+func (*ContractStorage) Descriptor() ([]byte, []int) {
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ContractStorageRange) GetRangeId() uint32 {
-	if x != nil {
-		return x.RangeId
-	}
-	return 0
-}
-
-func (x *ContractStorageRange) GetRoot() *Hash {
-	if x != nil {
-		return x.Root
-	}
-	return nil
-}
-
-func (x *ContractStorageRange) GetKeyValue() []*ContractStoredValue {
+func (x *ContractStorage) GetKeyValue() []*ContractStoredValue {
 	if x != nil {
 		return x.KeyValue
 	}
 	return nil
 }
+
+type ContractStorageResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	StateRoot *Hash `protobuf:"bytes,1,opt,name=state_root,json=stateRoot,proto3" json:"state_root,omitempty"`
+	// Types that are assignable to Responses:
+	//
+	//	*ContractStorageResponse_Storage
+	//	*ContractStorageResponse_Fin
+	Responses isContractStorageResponse_Responses `protobuf_oneof:"responses"`
+}
+
+func (x *ContractStorageResponse) Reset() {
+	*x = ContractStorageResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ContractStorageResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ContractStorageResponse) ProtoMessage() {}
+
+func (x *ContractStorageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ContractStorageResponse.ProtoReflect.Descriptor instead.
+func (*ContractStorageResponse) Descriptor() ([]byte, []int) {
+	return file_p2p_proto_snapshot_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ContractStorageResponse) GetStateRoot() *Hash {
+	if x != nil {
+		return x.StateRoot
+	}
+	return nil
+}
+
+func (m *ContractStorageResponse) GetResponses() isContractStorageResponse_Responses {
+	if m != nil {
+		return m.Responses
+	}
+	return nil
+}
+
+func (x *ContractStorageResponse) GetStorage() *ContractStorage {
+	if x, ok := x.GetResponses().(*ContractStorageResponse_Storage); ok {
+		return x.Storage
+	}
+	return nil
+}
+
+func (x *ContractStorageResponse) GetFin() *Fin {
+	if x, ok := x.GetResponses().(*ContractStorageResponse_Fin); ok {
+		return x.Fin
+	}
+	return nil
+}
+
+type isContractStorageResponse_Responses interface {
+	isContractStorageResponse_Responses()
+}
+
+type ContractStorageResponse_Storage struct {
+	Storage *ContractStorage `protobuf:"bytes,2,opt,name=storage,proto3,oneof"`
+}
+
+type ContractStorageResponse_Fin struct {
+	Fin *Fin `protobuf:"bytes,3,opt,name=fin,proto3,oneof"`
+}
+
+func (*ContractStorageResponse_Storage) isContractStorageResponse_Responses() {}
+
+func (*ContractStorageResponse_Fin) isContractStorageResponse_Responses() {}
 
 type PatriciaNode_Edge struct {
 	state         protoimpl.MessageState
@@ -667,7 +958,7 @@ type PatriciaNode_Edge struct {
 func (x *PatriciaNode_Edge) Reset() {
 	*x = PatriciaNode_Edge{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[10]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -680,7 +971,7 @@ func (x *PatriciaNode_Edge) String() string {
 func (*PatriciaNode_Edge) ProtoMessage() {}
 
 func (x *PatriciaNode_Edge) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[10]
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -729,7 +1020,7 @@ type PatriciaNode_Binary struct {
 func (x *PatriciaNode_Binary) Reset() {
 	*x = PatriciaNode_Binary{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_p2p_proto_snapshot_proto_msgTypes[11]
+		mi := &file_p2p_proto_snapshot_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -742,7 +1033,7 @@ func (x *PatriciaNode_Binary) String() string {
 func (*PatriciaNode_Binary) ProtoMessage() {}
 
 func (x *PatriciaNode_Binary) ProtoReflect() protoreflect.Message {
-	mi := &file_p2p_proto_snapshot_proto_msgTypes[11]
+	mi := &file_p2p_proto_snapshot_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -809,56 +1100,94 @@ var file_p2p_proto_snapshot_proto_rawDesc = []byte{
 	0x07, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05,
 	0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x07, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x12, 0x14,
 	0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6e,
-	0x6f, 0x6e, 0x63, 0x65, 0x22, 0x8d, 0x01, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x74,
-	0x72, 0x61, 0x63, 0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x19, 0x0a, 0x04, 0x72, 0x6f, 0x6f,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x04,
-	0x72, 0x6f, 0x6f, 0x74, 0x12, 0x1b, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x05, 0x73, 0x74, 0x61, 0x72,
-	0x74, 0x12, 0x17, 0x0a, 0x03, 0x65, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05,
-	0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x03, 0x65, 0x6e, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x63, 0x68,
-	0x75, 0x6e, 0x6b, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x70, 0x72, 0x6f, 0x6f, 0x66, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x0e, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73, 0x50, 0x65, 0x72, 0x50,
-	0x72, 0x6f, 0x6f, 0x66, 0x22, 0x35, 0x0a, 0x0d, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74,
-	0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x24, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53,
-	0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x65, 0x22, 0x8a, 0x01, 0x0a, 0x0d,
-	0x47, 0x65, 0x74, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x19, 0x0a,
-	0x04, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61,
-	0x73, 0x68, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x12, 0x1b, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x05,
-	0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x17, 0x0a, 0x03, 0x65, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x03, 0x65, 0x6e, 0x64, 0x12, 0x28,
-	0x0a, 0x10, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x70, 0x72, 0x6f,
-	0x6f, 0x66, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0e, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73,
-	0x50, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x22, 0x49, 0x0a, 0x10, 0x53, 0x74, 0x6f, 0x72,
-	0x61, 0x67, 0x65, 0x4c, 0x65, 0x61, 0x66, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x19, 0x0a, 0x04,
-	0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73,
-	0x68, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x12, 0x1a, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x08, 0x2e, 0x46, 0x65, 0x6c, 0x74, 0x32, 0x35, 0x32, 0x52, 0x03,
-	0x6b, 0x65, 0x79, 0x22, 0x7c, 0x0a, 0x11, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x61,
-	0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x61, 0x6e, 0x67,
-	0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x72, 0x61, 0x6e, 0x67,
-	0x65, 0x49, 0x64, 0x12, 0x27, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x11, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x4c, 0x65, 0x61, 0x66,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x23, 0x0a, 0x03,
-	0x65, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x53, 0x74, 0x6f, 0x72,
-	0x61, 0x67, 0x65, 0x4c, 0x65, 0x61, 0x66, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x03, 0x65, 0x6e,
-	0x64, 0x22, 0x69, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74,
-	0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x24, 0x0a, 0x0a,
+	0x6f, 0x6e, 0x63, 0x65, 0x22, 0xb4, 0x01, 0x0a, 0x14, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63,
+	0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a,
+	0x06, 0x64, 0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x64,
+	0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x12, 0x24, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x74, 0x65, 0x5f, 0x72,
+	0x6f, 0x6f, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68,
+	0x52, 0x09, 0x73, 0x74, 0x61, 0x74, 0x65, 0x52, 0x6f, 0x6f, 0x74, 0x12, 0x1b, 0x0a, 0x05, 0x73,
+	0x74, 0x61, 0x72, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73,
+	0x68, 0x52, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x17, 0x0a, 0x03, 0x65, 0x6e, 0x64, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x03, 0x65, 0x6e,
+	0x64, 0x12, 0x28, 0x0a, 0x10, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f,
+	0x70, 0x72, 0x6f, 0x6f, 0x66, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0e, 0x63, 0x68, 0x75,
+	0x6e, 0x6b, 0x73, 0x50, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x22, 0x35, 0x0a, 0x0d, 0x43,
+	0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x24, 0x0a, 0x05,
+	0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x43, 0x6f,
+	0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x05, 0x73, 0x74, 0x61,
+	0x74, 0x65, 0x22, 0xe4, 0x01, 0x0a, 0x15, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x52,
+	0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x24, 0x0a, 0x0a,
 	0x73, 0x74, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x09, 0x73, 0x74, 0x61, 0x74, 0x65, 0x52, 0x6f,
-	0x6f, 0x74, 0x12, 0x28, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x12, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0x7e, 0x0a, 0x14,
-	0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52,
-	0x61, 0x6e, 0x67, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x5f, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x49, 0x64, 0x12,
-	0x19, 0x0a, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e,
-	0x48, 0x61, 0x73, 0x68, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x12, 0x30, 0x0a, 0x08, 0x6b, 0x65,
-	0x79, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x43,
-	0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x64, 0x56, 0x61, 0x6c,
-	0x75, 0x65, 0x52, 0x08, 0x6b, 0x65, 0x79, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x74, 0x12, 0x2c, 0x0a, 0x0e, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x73, 0x5f,
+	0x72, 0x6f, 0x6f, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73,
+	0x68, 0x52, 0x0d, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x73, 0x52, 0x6f, 0x6f, 0x74,
+	0x12, 0x28, 0x0a, 0x0c, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x5f, 0x72, 0x6f, 0x6f, 0x74,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x0b, 0x63,
+	0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x52, 0x6f, 0x6f, 0x74, 0x12, 0x26, 0x0a, 0x05, 0x72, 0x61,
+	0x6e, 0x67, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x43, 0x6f, 0x6e, 0x74,
+	0x72, 0x61, 0x63, 0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x48, 0x00, 0x52, 0x05, 0x72, 0x61, 0x6e,
+	0x67, 0x65, 0x12, 0x18, 0x0a, 0x03, 0x66, 0x69, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x04, 0x2e, 0x46, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x03, 0x66, 0x69, 0x6e, 0x42, 0x0b, 0x0a, 0x09,
+	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x22, 0x8e, 0x01, 0x0a, 0x11, 0x43, 0x6c,
+	0x61, 0x73, 0x73, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x19, 0x0a, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e,
+	0x48, 0x61, 0x73, 0x68, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x12, 0x1b, 0x0a, 0x05, 0x73, 0x74,
+	0x61, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68,
+	0x52, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x17, 0x0a, 0x03, 0x65, 0x6e, 0x64, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x03, 0x65, 0x6e, 0x64,
+	0x12, 0x28, 0x0a, 0x10, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x70,
+	0x72, 0x6f, 0x6f, 0x66, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0e, 0x63, 0x68, 0x75, 0x6e,
+	0x6b, 0x73, 0x50, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x6f, 0x66, 0x22, 0xd4, 0x01, 0x0a, 0x12, 0x43,
+	0x6c, 0x61, 0x73, 0x73, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x19, 0x0a, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x12, 0x2c, 0x0a, 0x0e,
+	0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x73, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x0d, 0x63, 0x6f, 0x6e,
+	0x74, 0x72, 0x61, 0x63, 0x74, 0x73, 0x52, 0x6f, 0x6f, 0x74, 0x12, 0x28, 0x0a, 0x0c, 0x63, 0x6c,
+	0x61, 0x73, 0x73, 0x65, 0x73, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x0b, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73,
+	0x52, 0x6f, 0x6f, 0x74, 0x12, 0x24, 0x0a, 0x07, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x08, 0x2e, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x48,
+	0x00, 0x52, 0x07, 0x63, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x12, 0x18, 0x0a, 0x03, 0x66, 0x69,
+	0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x46, 0x69, 0x6e, 0x48, 0x00, 0x52,
+	0x03, 0x66, 0x69, 0x6e, 0x42, 0x0b, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x73, 0x22, 0x69, 0x0a, 0x10, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x4c, 0x65, 0x61, 0x66,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x39, 0x0a, 0x15, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63,
+	0x74, 0x5f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x13, 0x63, 0x6f, 0x6e,
+	0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x6f, 0x6f, 0x74,
+	0x12, 0x1a, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x08, 0x2e,
+	0x46, 0x65, 0x6c, 0x74, 0x32, 0x35, 0x32, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x61, 0x0a, 0x11,
+	0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x12, 0x27, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x11, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x4c, 0x65, 0x61, 0x66, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x52, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x23, 0x0a, 0x03, 0x65, 0x6e,
+	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x4c, 0x65, 0x61, 0x66, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x03, 0x65, 0x6e, 0x64, 0x22,
+	0x80, 0x01, 0x0a, 0x16, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72,
+	0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x6f,
+	0x6d, 0x61, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x64, 0x6f, 0x6d, 0x61,
+	0x69, 0x6e, 0x12, 0x24, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x6f, 0x6f, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x09, 0x73,
+	0x74, 0x61, 0x74, 0x65, 0x52, 0x6f, 0x6f, 0x74, 0x12, 0x28, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x05, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x22, 0x43, 0x0a, 0x0f, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74,
+	0x6f, 0x72, 0x61, 0x67, 0x65, 0x12, 0x30, 0x0a, 0x08, 0x6b, 0x65, 0x79, 0x56, 0x61, 0x6c, 0x75,
+	0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x61,
+	0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x64, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x08, 0x6b,
+	0x65, 0x79, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x94, 0x01, 0x0a, 0x17, 0x43, 0x6f, 0x6e, 0x74,
+	0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x24, 0x0a, 0x0a, 0x73, 0x74, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x6f, 0x6f,
+	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x48, 0x61, 0x73, 0x68, 0x52, 0x09,
+	0x73, 0x74, 0x61, 0x74, 0x65, 0x52, 0x6f, 0x6f, 0x74, 0x12, 0x2c, 0x0a, 0x07, 0x73, 0x74, 0x6f,
+	0x72, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x43, 0x6f, 0x6e,
+	0x74, 0x72, 0x61, 0x63, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x48, 0x00, 0x52, 0x07,
+	0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x03, 0x66, 0x69, 0x6e, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x46, 0x69, 0x6e, 0x48, 0x00, 0x52, 0x03, 0x66, 0x69,
+	0x6e, 0x42, 0x0b, 0x0a, 0x09, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x73, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -873,55 +1202,72 @@ func file_p2p_proto_snapshot_proto_rawDescGZIP() []byte {
 	return file_p2p_proto_snapshot_proto_rawDescData
 }
 
-var file_p2p_proto_snapshot_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_p2p_proto_snapshot_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_p2p_proto_snapshot_proto_goTypes = []interface{}{
 	(*PatriciaNode)(nil),            // 0: PatriciaNode
 	(*PatriciaRangeProof)(nil),      // 1: PatriciaRangeProof
 	(*ContractState)(nil),           // 2: ContractState
-	(*GetContractRange)(nil),        // 3: GetContractRange
+	(*ContractRangeRequest)(nil),    // 3: ContractRangeRequest
 	(*ContractRange)(nil),           // 4: ContractRange
-	(*GetClassRange)(nil),           // 5: GetClassRange
-	(*StorageLeafQuery)(nil),        // 6: StorageLeafQuery
-	(*StorageRangeQuery)(nil),       // 7: StorageRangeQuery
-	(*GetContractStorageRange)(nil), // 8: GetContractStorageRange
-	(*ContractStorageRange)(nil),    // 9: ContractStorageRange
-	(*PatriciaNode_Edge)(nil),       // 10: PatriciaNode.Edge
-	(*PatriciaNode_Binary)(nil),     // 11: PatriciaNode.Binary
-	(*Hash)(nil),                    // 12: Hash
-	(*Felt252)(nil),                 // 13: Felt252
-	(*ContractStoredValue)(nil),     // 14: ContractStoredValue
+	(*ContractRangeResponse)(nil),   // 5: ContractRangeResponse
+	(*ClassRangeRequest)(nil),       // 6: ClassRangeRequest
+	(*ClassRangeResponse)(nil),      // 7: ClassRangeResponse
+	(*StorageLeafQuery)(nil),        // 8: StorageLeafQuery
+	(*StorageRangeQuery)(nil),       // 9: StorageRangeQuery
+	(*ContractStorageRequest)(nil),  // 10: ContractStorageRequest
+	(*ContractStorage)(nil),         // 11: ContractStorage
+	(*ContractStorageResponse)(nil), // 12: ContractStorageResponse
+	(*PatriciaNode_Edge)(nil),       // 13: PatriciaNode.Edge
+	(*PatriciaNode_Binary)(nil),     // 14: PatriciaNode.Binary
+	(*Hash)(nil),                    // 15: Hash
+	(*Fin)(nil),                     // 16: Fin
+	(*Classes)(nil),                 // 17: Classes
+	(*Felt252)(nil),                 // 18: Felt252
+	(*ContractStoredValue)(nil),     // 19: ContractStoredValue
 }
 var file_p2p_proto_snapshot_proto_depIdxs = []int32{
-	10, // 0: PatriciaNode.edge:type_name -> PatriciaNode.Edge
-	11, // 1: PatriciaNode.binary:type_name -> PatriciaNode.Binary
+	13, // 0: PatriciaNode.edge:type_name -> PatriciaNode.Edge
+	14, // 1: PatriciaNode.binary:type_name -> PatriciaNode.Binary
 	0,  // 2: PatriciaRangeProof.nodes:type_name -> PatriciaNode
-	12, // 3: ContractState.address:type_name -> Hash
-	12, // 4: ContractState.class:type_name -> Hash
-	12, // 5: ContractState.storage:type_name -> Hash
-	12, // 6: GetContractRange.root:type_name -> Hash
-	12, // 7: GetContractRange.start:type_name -> Hash
-	12, // 8: GetContractRange.end:type_name -> Hash
+	15, // 3: ContractState.address:type_name -> Hash
+	15, // 4: ContractState.class:type_name -> Hash
+	15, // 5: ContractState.storage:type_name -> Hash
+	15, // 6: ContractRangeRequest.state_root:type_name -> Hash
+	15, // 7: ContractRangeRequest.start:type_name -> Hash
+	15, // 8: ContractRangeRequest.end:type_name -> Hash
 	2,  // 9: ContractRange.state:type_name -> ContractState
-	12, // 10: GetClassRange.root:type_name -> Hash
-	12, // 11: GetClassRange.start:type_name -> Hash
-	12, // 12: GetClassRange.end:type_name -> Hash
-	12, // 13: StorageLeafQuery.root:type_name -> Hash
-	13, // 14: StorageLeafQuery.key:type_name -> Felt252
-	6,  // 15: StorageRangeQuery.start:type_name -> StorageLeafQuery
-	6,  // 16: StorageRangeQuery.end:type_name -> StorageLeafQuery
-	12, // 17: GetContractStorageRange.state_root:type_name -> Hash
-	7,  // 18: GetContractStorageRange.query:type_name -> StorageRangeQuery
-	12, // 19: ContractStorageRange.root:type_name -> Hash
-	14, // 20: ContractStorageRange.keyValue:type_name -> ContractStoredValue
-	13, // 21: PatriciaNode.Edge.path:type_name -> Felt252
-	13, // 22: PatriciaNode.Edge.value:type_name -> Felt252
-	13, // 23: PatriciaNode.Binary.left:type_name -> Felt252
-	13, // 24: PatriciaNode.Binary.right:type_name -> Felt252
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	15, // 10: ContractRangeResponse.state_root:type_name -> Hash
+	15, // 11: ContractRangeResponse.contracts_root:type_name -> Hash
+	15, // 12: ContractRangeResponse.classes_root:type_name -> Hash
+	4,  // 13: ContractRangeResponse.range:type_name -> ContractRange
+	16, // 14: ContractRangeResponse.fin:type_name -> Fin
+	15, // 15: ClassRangeRequest.root:type_name -> Hash
+	15, // 16: ClassRangeRequest.start:type_name -> Hash
+	15, // 17: ClassRangeRequest.end:type_name -> Hash
+	15, // 18: ClassRangeResponse.root:type_name -> Hash
+	15, // 19: ClassRangeResponse.contracts_root:type_name -> Hash
+	15, // 20: ClassRangeResponse.classes_root:type_name -> Hash
+	17, // 21: ClassRangeResponse.classes:type_name -> Classes
+	16, // 22: ClassRangeResponse.fin:type_name -> Fin
+	15, // 23: StorageLeafQuery.contract_storage_root:type_name -> Hash
+	18, // 24: StorageLeafQuery.key:type_name -> Felt252
+	8,  // 25: StorageRangeQuery.start:type_name -> StorageLeafQuery
+	8,  // 26: StorageRangeQuery.end:type_name -> StorageLeafQuery
+	15, // 27: ContractStorageRequest.state_root:type_name -> Hash
+	9,  // 28: ContractStorageRequest.query:type_name -> StorageRangeQuery
+	19, // 29: ContractStorage.keyValue:type_name -> ContractStoredValue
+	15, // 30: ContractStorageResponse.state_root:type_name -> Hash
+	11, // 31: ContractStorageResponse.storage:type_name -> ContractStorage
+	16, // 32: ContractStorageResponse.fin:type_name -> Fin
+	18, // 33: PatriciaNode.Edge.path:type_name -> Felt252
+	18, // 34: PatriciaNode.Edge.value:type_name -> Felt252
+	18, // 35: PatriciaNode.Binary.left:type_name -> Felt252
+	18, // 36: PatriciaNode.Binary.right:type_name -> Felt252
+	37, // [37:37] is the sub-list for method output_type
+	37, // [37:37] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_p2p_proto_snapshot_proto_init() }
@@ -969,7 +1315,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetContractRange); i {
+			switch v := v.(*ContractRangeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -993,7 +1339,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetClassRange); i {
+			switch v := v.(*ContractRangeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1005,7 +1351,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StorageLeafQuery); i {
+			switch v := v.(*ClassRangeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1017,7 +1363,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StorageRangeQuery); i {
+			switch v := v.(*ClassRangeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1029,7 +1375,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetContractStorageRange); i {
+			switch v := v.(*StorageLeafQuery); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1041,7 +1387,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ContractStorageRange); i {
+			switch v := v.(*StorageRangeQuery); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1053,7 +1399,7 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PatriciaNode_Edge); i {
+			switch v := v.(*ContractStorageRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1065,6 +1411,42 @@ func file_p2p_proto_snapshot_proto_init() {
 			}
 		}
 		file_p2p_proto_snapshot_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ContractStorage); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_p2p_proto_snapshot_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ContractStorageResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_p2p_proto_snapshot_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PatriciaNode_Edge); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_p2p_proto_snapshot_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PatriciaNode_Binary); i {
 			case 0:
 				return &v.state
@@ -1081,13 +1463,25 @@ func file_p2p_proto_snapshot_proto_init() {
 		(*PatriciaNode_Edge_)(nil),
 		(*PatriciaNode_Binary_)(nil),
 	}
+	file_p2p_proto_snapshot_proto_msgTypes[5].OneofWrappers = []interface{}{
+		(*ContractRangeResponse_Range)(nil),
+		(*ContractRangeResponse_Fin)(nil),
+	}
+	file_p2p_proto_snapshot_proto_msgTypes[7].OneofWrappers = []interface{}{
+		(*ClassRangeResponse_Classes)(nil),
+		(*ClassRangeResponse_Fin)(nil),
+	}
+	file_p2p_proto_snapshot_proto_msgTypes[12].OneofWrappers = []interface{}{
+		(*ContractStorageResponse_Storage)(nil),
+		(*ContractStorageResponse_Fin)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_p2p_proto_snapshot_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
