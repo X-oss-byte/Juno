@@ -69,15 +69,11 @@ jobs:
   
   dev_starknet_js_tests:
     needs: [deploy_to_dev]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: ./.github/actions/starknet-js-tests
-      with:
-        TEST_RPC_URL: ${{ secrets.GOERLI_NODE_URL }}
-        TEST_ACCOUNT_ADDRESS: ${{ secrets.TEST_ACCOUNT_ADDRESS }}
-        TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.TEST_ACCOUNT_PRIVATE_KEY }}
-          
+    uses: ./.github/workflows/starknet-js-tests.yml
+    secrets:
+      TEST_RPC_URL: "http://170.187.207.45:6065"
+      TEST_ACCOUNT_ADDRESS: ${{ secrets.GOERLI_TEST_ACCOUNT_ADDRESS }}
+      TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.GOERLI_TEST_ACCOUNT_PRIVATE_KEY }}
 
   # deploy_to_staging:
     # needs: [docker_build_and_publish, deploy_to_dev]
