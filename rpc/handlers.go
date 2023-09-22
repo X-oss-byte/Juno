@@ -463,12 +463,15 @@ func (h *Handler) TransactionReceiptByHash(hash felt.Felt) (*TransactionReceipt,
 		}
 	}
 
+	var messageHash *felt.Felt
 	var contractAddress *felt.Felt
 	switch v := txn.(type) {
 	case *core.DeployTransaction:
 		contractAddress = v.ContractAddress
 	case *core.DeployAccountTransaction:
 		contractAddress = v.ContractAddress
+	case *core.L1HandlerTransaction:
+		messageHash, _ = new(felt.Felt).SetString("0xdeadbeef") // todo: find out how this is calculated
 	}
 
 	var receiptBlockNumber *uint64
@@ -507,6 +510,7 @@ func (h *Handler) TransactionReceiptByHash(hash felt.Felt) (*TransactionReceipt,
 		ContractAddress:    contractAddress,
 		RevertReason:       receipt.RevertReason,
 		ExecutionResources: adaptExecutionResources(receipt.ExecutionResources),
+		MessageHash:        messageHash,
 	}, nil
 }
 
@@ -531,6 +535,7 @@ func (h *Handler) LegacyTransactionReceiptByHash(hash felt.Felt) (*TransactionRe
 	receipt, err := h.TransactionReceiptByHash(hash)
 	if receipt != nil {
 		receipt.ExecutionResources = nil
+		receipt.MessageHash = nil
 	}
 	return receipt, err
 }
