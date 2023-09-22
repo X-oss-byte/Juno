@@ -2,6 +2,11 @@ name: starknet-js tests
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: environment to deploy to
+        required: true
     secrets:
       TEST_RPC_URL:
         required: false
@@ -13,6 +18,7 @@ on:
 jobs:
   starknet-js-tests:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     env:
       TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
       TEST_ACCOUNT_ADDRESS: ${{ secrets.TEST_ACCOUNT_ADDRESS }}
