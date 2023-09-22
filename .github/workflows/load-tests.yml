@@ -42,4 +42,3 @@ jobs:
         with:
           name: k6-report
           path: results.json
-

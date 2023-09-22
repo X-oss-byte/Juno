@@ -2,27 +2,17 @@ name: starknet-js tests
 
 on:
   workflow_call:
-    inputs:
-      environment:
-        type: string
-        description: environment to deploy to
-        required: true
     secrets:
+      TEST_RPC_URL:
+        required: false
       TEST_ACCOUNT_ADDRESS:
         required: false
       TEST_ACCOUNT_PRIVATE_KEY:
           required: false
 
 jobs:
-  starknet-js-tests:
+  test:
     runs-on: ubuntu-latest
-    environment: 
-      name: Development
-    env:
-      TEST_RPC_URL: ${{ secrets.DEV_GOERLI_URL }}
-      TEST_ACCOUNT_ADDRESS: ${{ secrets.TEST_ACCOUNT_ADDRESS }}
-      TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.TEST_ACCOUNT_PRIVATE_KEY }}
-      
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v4
@@ -40,3 +30,7 @@ jobs:
   
       - name: Run tests
         run: npm test
+        env:
+          TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
+          TEST_ACCOUNT_ADDRESS: ${{ secrets.TEST_ACCOUNT_ADDRESS }}
+          TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.TEST_ACCOUNT_PRIVATE_KEY }}
