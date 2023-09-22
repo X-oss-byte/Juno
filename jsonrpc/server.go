@@ -195,10 +195,21 @@ func (s *Server) Handle(ctx context.Context, data []byte) ([]byte, error) {
 	return s.HandleReader(ctx, bytes.NewReader(data))
 }
 
+type connKey struct{}
+
+func ConnFromContext(ctx context.Context) (io.ReadWriter, bool) {
+	// We don't need to worry about conn being nil since we
+	// store the connection in the context on every request.
+	conn, ok := ctx.Value(connKey{}).(io.ReadWriter)
+	return conn, ok
+}
+
 // HandleReader processes a request to the server
 // It returns the response in a byte array, only returns an
 // error if it can not create the response byte array
 func (s *Server) HandleReader(ctx context.Context, reader io.Reader) ([]byte, error) {
+	connCtx := context.WithValue(ctx, connKey{}, reader)
+
 	bufferedReader := bufio.NewReaderSize(reader, bufferSize)
 	requestIsBatch := isBatch(bufferedReader)
 	res := &response{
@@ -212,7 +223,7 @@ func (s *Server) HandleReader(ctx context.Context, reader io.Reader) ([]byte, er
 		req := new(request)
 		if jsonErr := dec.Decode(req); jsonErr != nil {
 			res.Error = Err(InvalidJSON, jsonErr.Error())
-		} else if resObject, handleErr := s.handleRequest(ctx, req); handleErr != nil {
+		} else if resObject, handleErr := s.handleRequest(connCtx, req); handleErr != nil {
 			if !errors.Is(handleErr, ErrInvalidID) {
 				res.ID = req.ID
 			}
@@ -228,7 +239,7 @@ func (s *Server) HandleReader(ctx context.Context, reader io.Reader) ([]byte, er
 		} else if len(batchReq) == 0 {
 			res.Error = Err(InvalidRequest, "empty batch")
 		} else {
-			return s.handleBatchRequest(ctx, batchReq)
+			return s.handleBatchRequest(connCtx, batchReq)
 		}
 	}
 
