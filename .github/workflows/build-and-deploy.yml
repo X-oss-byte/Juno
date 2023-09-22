@@ -73,7 +73,6 @@ jobs:
     with:
       environment: Development
     secrets:
-      TEST_RPC_URL: "http://170.187.207.45:6065"
       TEST_ACCOUNT_ADDRESS: ${{ secrets.GOERLI_TEST_ACCOUNT_ADDRESS }}
       TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.GOERLI_TEST_ACCOUNT_PRIVATE_KEY }}
     

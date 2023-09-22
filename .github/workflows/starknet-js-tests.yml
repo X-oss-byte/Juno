@@ -8,8 +8,6 @@ on:
         description: environment to deploy to
         required: true
     secrets:
-      TEST_RPC_URL:
-        required: false
       TEST_ACCOUNT_ADDRESS:
         required: false
       TEST_ACCOUNT_PRIVATE_KEY:
@@ -18,9 +16,10 @@ on:
 jobs:
   starknet-js-tests:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: 
+      name: Development
     env:
-      TEST_RPC_URL: ${{ secrets.TEST_RPC_URL }}
+      TEST_RPC_URL: ${{ secrets.DEV_GOERLI_URL }}
       TEST_ACCOUNT_ADDRESS: ${{ secrets.TEST_ACCOUNT_ADDRESS }}
       TEST_ACCOUNT_PRIVATE_KEY: ${{ secrets.TEST_ACCOUNT_PRIVATE_KEY }}
       
